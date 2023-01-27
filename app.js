@@ -40,7 +40,7 @@ app.use(xss());
 app.use(mongoSanitize());
 
 // routes
-//app.use("/contract", dclRouter);
+app.use("/contract", dclRouter);
 app.use("/query", queryRouter);
 
 // middleware for error handling

@@ -1,16 +1,12 @@
 const express = require("express");
 const router = express.Router();
 
-const { verifyWhitelist } = require("../middleware/whitelistVerification");
-
 const {
   issueTokens,
-  isValidItem,
-  balanceOf,
+  isItemClaimed
 } = require("../controllers/dclController");
 
-router.post("/issueTokens", verifyWhitelist, issueTokens);
-router.get("/isValid", isValidItem);
-router.get("/balanceOf", balanceOf);
+router.post("/issueTokens", issueTokens);
+router.get("/isItemClaimed", isItemClaimed);
 
 module.exports = router;

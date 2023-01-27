@@ -1,7 +1,8 @@
 const helper = require("../utils/helper");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
-const Whitelist = require("../models/whitelist");
+const logger = require("../utils/logger");
+const DCLNft = require("../models/dcl");
 
 const issueTokens = async (req, res) => {
   try {
@@ -10,72 +11,97 @@ const issueTokens = async (req, res) => {
     const dclContract = await helper.getContractInstance(contractId);
     const { maxFeePerGas, maxPriorityFeePerGas } = await helper.getGasFees();
 
+    const itemCount = await dclContract.itemsCount();
+    if (itemIds[0] > itemCount) {
+      logger.error(
+        `The itemId: ${itemIds[0]} exceeded the itemCount: ${itemCount}`
+      );
+      throw new CustomError.BadRequestError("Invalid Item Id");
+    }
+
+    const item = await dclContract.items(itemIds[0]);
+    const totalSupply = Number(item.totalSupply._hex);
+    logger.info(`The total supply of item ${itemIds[0]} is ${totalSupply}`);
+
+    const maxSupply = Number(item.maxSupply._hex);
+    logger.info(`The maxium supply of item ${itemIds[0]} is ${maxSupply}`);
+
+    if (totalSupply >= maxSupply) {
+      logger.error(`The NFT is fully claimed for itemId: ${itemIds[0]}, Max supply is ${maxSupply}
+                   and total supply is ${totalSupply}`);
+      throw new CustomError.BadRequestError("The NFT is fully claimed");
+    }
+
+    const itemAlreadyClaimed = await DCLNft.findOne({
+      itemId: itemIds[0],
+      walletAddress: address[0],
+      phase: contractId,
+    });
+    if (itemAlreadyClaimed) {
+      logger.error(
+        `The item: ${itemIds[0]} of phase: ${contractId} is already claimed by: ${address[0]}`
+      );
+      throw new CustomError.BadRequestError("Item already claimed");
+    }
+
     const tx = await dclContract.issueTokens(address, itemIds, {
       maxFeePerGas,
       maxPriorityFeePerGas,
     });
     await tx.wait();
-    console.log(`Transaction successful: ${tx.hash}`);
+
+    const dcl = await DCLNft.create({
+      itemId: itemIds[0],
+      walletAddress: address[0],
+      phase: contractId,
+    });
+
+    logger.info(`Issue Tokens Transaction successful. Tx hash: ${tx.hash}, itemId: ${itemIds[0]},
+                wallet address: ${address[0]}, contract Phase: ${contractId}`);
     res.status(StatusCodes.CREATED).json({
-      msg: `Tokens have minted successfully`,
+      msg: `Tokens have been minted successfully`,
       hash: `${tx.hash}`,
     });
   } catch (error) {
-    console.error(error);
+    logger.error(`Issue Tokens Transaction failed. ItemId: ${req.body.itemIds[0]}, wallet address: ${req.body.address[0]},
+                 contract Phase: ${req.body.contractId}, error:${error}`);
     throw new CustomError.BadRequestError(error);
   }
 };
 
-const isValidItem = async (req, res) => {
+const isItemClaimed = async (req, res) => {
   try {
-    const dclContract = await helper.getContractInstance();
-    const itemId = req.body.itemId;
-    const itemCount = await dclContract.itemsCount();
-    const item = await dclContract.items(itemId);
-    console.log(`The item is ${item} out of ${itemCount}`);
+    const { address, itemIds, contractId } = req.body;
+    const itemAlreadyClaimed = await DCLNft.findOne({
+      itemId: itemIds[0],
+      walletAddress: address[0],
+      phase: contractId,
+    });
+    if (itemAlreadyClaimed) {
+      logger.info(
+        `The item: ${itemIds[0]} of phase: ${contractId} is already claimed by: ${address}`
+      );
+      res.status(StatusCodes.OK).json({
+        claimed: true,
+        msg: "Item already claimed",
+      });
+      return;
+    }
+    logger.info(
+      `The item: ${itemIds[0]} of phase: ${contractId} is not yet claimed by: ${address}`
+    );
     res.status(StatusCodes.OK).json({
-      msg: "Tokens validity status is returned",
+      claimed: false,
+      msg: "Item not yet claimed",
     });
   } catch (error) {
-    console.error(error);
-    throw new CustomError.BadRequestError(error);
-  }
-};
-
-const balanceOf = async (req, res) => {
-  try {
-    const dclContract = await helper.getContractInstance();
-    const address = req.body.address;
-    const balance = await dclContract.balanceOf(address);
-    console.log(`The balance of ${address} is ${balance}`);
-    res.status(StatusCodes.OK).json({
-      msg: "Balance of address is returned",
-    });
-  } catch (error) {
-    console.error(error);
-    throw new CustomError.BadRequestError(error);
-  }
-};
-
-const getItemTotalSupply = async (req, res, contractId) => {
-  try {
-    const dclContract = await helper.getContractInstance(contractId);
-    const itemId = req.body.itemId;
-    const item = await dclContract.items(itemId);
-    const totalSupply = item.totalSupply;
-    console.log(`The the total supply of item ${itemId} is ${totalSupply}`);
-    res.status(StatusCodes.OK).json({
-      msg: totalSupply,
-    });
-  } catch (error) {
-    console.error(error);
+    logger.error(`The get request for isItemClaimed method is failed. ItemId: ${req.body.itemIds[0]}, wallet address: ${req.body.address[0]},
+                 contract Phase: ${req.body.contractId}, error:${error}`);
     throw new CustomError.BadRequestError(error);
   }
 };
 
 module.exports = {
   issueTokens,
-  isValidItem,
-  balanceOf,
-  getItemTotalSupply,
+  isItemClaimed,
 };
