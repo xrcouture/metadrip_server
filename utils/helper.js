@@ -2,6 +2,7 @@ require("dotenv").config();
 const ethers = require("ethers");
 const axios = require("axios");
 const CustomError = require("../errors");
+const logger = require("./logger");
 
 const API_KEY = process.env.API_KEY;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
@@ -32,10 +33,11 @@ const getContractInstance = async (contractId) => {
 
     // contract instance
     const dclContract = new ethers.Contract(CONTRACT_ADDRESS, contract, signer);
+    logger.info(`GetContractInstance for Phase: ${contractId}, contract Address : ${CONTRACT_ADDRESS}`);
 
     return dclContract;
   } catch (error) {
-    console.error(error);
+    logger.error(`Error while getting contract Instance. Contract Phase: ${contractId}, error: ${error}`);
     throw new CustomError.BadRequestError(error);
   }
 };
@@ -56,9 +58,10 @@ const getGasFees = async () => {
       "gwei"
     );
 
+    logger.info(`Gas fees successfully calculated. maxFeePerGas: ${maxFeePerGas}, maxPriorityFeePerGas: ${maxPriorityFeePerGas}`);
     return { maxFeePerGas, maxPriorityFeePerGas };
   } catch (error) {
-    console.error(error);
+    logger.error(`Error while getting gas fees. error: ${error}`);
     throw new CustomError.BadRequestError(error);
   }
 };

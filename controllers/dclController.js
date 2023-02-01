@@ -59,7 +59,7 @@ const issueTokens = async (req, res) => {
     logger.info(`Issue Tokens Transaction successful. Tx hash: ${tx.hash}, itemId: ${itemIds[0]},
                 wallet address: ${address[0]}, contract Phase: ${contractId}`);
     res.status(StatusCodes.CREATED).json({
-      msg: `Tokens have been minted successfully`,
+      msg: `Tokens have been claimed successfully`,
       hash: `${tx.hash}`,
     });
   } catch (error) {
@@ -71,15 +71,15 @@ const issueTokens = async (req, res) => {
 
 const isItemClaimed = async (req, res) => {
   try {
-    const { address, itemIds, contractId } = req.body;
+    const { address, itemId, contractId } = req.body;
     const itemAlreadyClaimed = await DCLNft.findOne({
-      itemId: itemIds[0],
-      walletAddress: address[0],
+      itemId,
+      walletAddress: address,
       phase: contractId,
     });
     if (itemAlreadyClaimed) {
       logger.info(
-        `The item: ${itemIds[0]} of phase: ${contractId} is already claimed by: ${address}`
+        `The item: ${itemId} of phase: ${contractId} is already claimed by: ${address}`
       );
       res.status(StatusCodes.OK).json({
         claimed: true,
@@ -88,14 +88,14 @@ const isItemClaimed = async (req, res) => {
       return;
     }
     logger.info(
-      `The item: ${itemIds[0]} of phase: ${contractId} is not yet claimed by: ${address}`
+      `The item: ${itemId} of phase: ${contractId} is not yet claimed by: ${address}`
     );
     res.status(StatusCodes.OK).json({
       claimed: false,
       msg: "Item not yet claimed",
     });
   } catch (error) {
-    logger.error(`The get request for isItemClaimed method is failed. ItemId: ${req.body.itemIds[0]}, wallet address: ${req.body.address[0]},
+    logger.error(`The get request for isItemClaimed method is failed. ItemId: ${req.body.itemId}, wallet address: ${req.body.address},
                  contract Phase: ${req.body.contractId}, error:${error}`);
     throw new CustomError.BadRequestError(error);
   }

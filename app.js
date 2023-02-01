@@ -13,6 +13,7 @@ const connectDB = require("./db/connect");
 //  routers
 const dclRouter = require("./routes/dclRoute");
 const queryRouter = require("./routes/queryRoute");
+const utilitiesRouter = require("./routes/utilityRoute");
 
 // error handler
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -42,6 +43,7 @@ app.use(mongoSanitize());
 // routes
 app.use("/contract", dclRouter);
 app.use("/query", queryRouter);
+app.use("/utility", utilitiesRouter);
 
 // middleware for error handling
 app.use(notFoundMiddleware);

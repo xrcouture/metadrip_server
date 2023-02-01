@@ -7,6 +7,6 @@ const {
 } = require("../controllers/dclController");
 
 router.post("/issueTokens", issueTokens);
-router.get("/isItemClaimed", isItemClaimed);
+router.post("/isItemClaimed", isItemClaimed);
 
 module.exports = router;
