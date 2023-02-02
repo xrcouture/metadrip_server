@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post(
   "/upload",
-  uploadToS3("Metadrip/Virtual Fitting/User").any("file"),
+  uploadToS3("Metadrip/Virtual Fitting/User").any("files"),
   uploadAssets
 );
 router.post("/isItemClaimed", isVirtualFittingClaimed);
