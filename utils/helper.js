@@ -15,12 +15,9 @@ const dclPhase2Contract = require("../contracts/DCL_2.json");
 
 const getContractInstance = async (contractId) => {
   try {
-    /*const contract = contractId == 1 ? dclPhase1Contract : dclPhase2Contract;
+    const contract = contractId == 1 ? dclPhase1Contract : dclPhase2Contract;
     const CONTRACT_ADDRESS =
-      contractId == 1 ? DCL_PHASE1_CONTRACT_ADDRESS : DCL_PHASE2_CONTRACT_ADDRESS;*/
-    const contract1 = require("../contracts/DCL_1_test.json");
-    const contract = contract1;
-    const CONTRACT_ADDRESS = "0x9CE9C3D31224E5A3Da12cc29C812d87D88E02900";
+      contractId == 1 ? DCL_PHASE1_CONTRACT_ADDRESS : DCL_PHASE2_CONTRACT_ADDRESS;
 
     // provider - Alchemy
     const alchemyProvider = new ethers.providers.AlchemyProvider(

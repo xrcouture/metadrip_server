@@ -28,10 +28,10 @@ const s3 = new S3Client({
 });
 
 // FILTER OPTIONS LIKE VALIDATING FILE EXTENSION
-const filter = (req, file, cb) => {
+const filter = (req, files, cb) => {
   const filetypes = /jpeg|jpg|png/;
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
+  const extname = filetypes.test(path.extname(files.originalname).toLowerCase());
+  const mimetype = filetypes.test(files.mimetype);
   if (mimetype && extname) {
     return cb(null, true);
   } else {
@@ -47,12 +47,12 @@ const multerS3Config = (folderName) =>
     // bucket - WE CAN PASS SUB FOLDER NAME ALSO LIKE 'bucket-name/sub-folder1'
     bucket: bucketName,
     // META DATA FOR PUTTING FIELD NAME
-    metadata: function (req, file, cb) {
-      cb(null, { fieldName: file.fieldname });
+    metadata: function (req, files, cb) {
+      cb(null, { fieldName: files.fieldname });
     },
     // SET / MODIFY ORIGINAL FILE NAME
-    key: function (req, file, cb) {
-      cb(null, namingConversion(folderName, file.originalname));
+    key: function (req, files, cb) {
+      cb(null, namingConversion(folderName, files.originalname));
     },
   });
 
