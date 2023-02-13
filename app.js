@@ -10,11 +10,19 @@ const app = express();
 // database
 const connectDB = require("./db/connect");
 
+//helper
+const helper = require("./utils/helper");
+const constants = require("./utils/constants");
+
 //  routers
 const dclRouter = require("./routes/dclRoute");
 const queryRouter = require("./routes/queryRoute");
 const utilitiesRouter = require("./routes/utilityRoute");
 const contactRouter = require("./routes/contactRoute");
+const productRoute = require("./routes/productRoute");
+
+//controllers
+const { newTokenIDMinted } = require("./controllers/productController");
 
 // error handler
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -46,6 +54,7 @@ app.use("/contract", dclRouter);
 app.use("/query", queryRouter);
 app.use("/utility", utilitiesRouter);
 app.use("/user", contactRouter);
+app.use("/product", productRoute);
 
 // middleware for error handling
 app.use(notFoundMiddleware);
@@ -71,5 +80,27 @@ const start = async () => {
     throw new CustomError.CustomAPIError("Could not establish a connection");
   }
 };
+const listenToEvents = async() => {
+  const phase1Instance = await helper.getMetaDripContractInstance(1);
+  phase1Instance.on("Transfer", async (from, to, tokenId) => {
+    // Handle transfer events during minting and update DB
+    if (from == constants.EMPTY_ADDRESS) {
+      logger.info(`New TokenId: ${Number(tokenId._hex)} is minted for Phase 1`);
+      await newTokenIDMinted(1, Number(tokenId._hex));
+    }
+  });
+
+  const phase2Instance = await helper.getMetaDripContractInstance(2);
+  phase2Instance.on("Transfer", async (from, to, tokenId) => {
+    // Handle transfer events during minting and update DB
+    if (from == constants.EMPTY_ADDRESS) {
+      logger.info(`New TokenId: ${Number(tokenId._hex)} is minted for Phase 2`);
+      await newTokenIDMinted(2, Number(tokenId._hex));
+    }
+  });
+  logger.info(`Listening to phase 1 and phase 2 contract events`);
+}
 
 start();
+
+listenToEvents();
