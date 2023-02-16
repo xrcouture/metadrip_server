@@ -10,7 +10,7 @@ const transport = new DailyRotateFile({
   maxFiles: "20",
   prepend: true,
   level: process.env.LOGGING_LEVEL,
-  auditFile: `./Logs/xrcie.${process.env.LOGGING_LEVEL}-audit.json`,
+  //auditFile: `./Logs/xrcie.${process.env.LOGGING_LEVEL}-audit.json`,
 });
 
 // Create logger
