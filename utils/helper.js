@@ -8,10 +8,14 @@ const API_KEY = process.env.API_KEY;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const DCL_PHASE1_CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS_1;
 const DCL_PHASE2_CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS_2;
+const METADRIP_PHASE1_CONTRACT_ADDRESS = process.env.METADRIP_CONTRACT_ADDRESS_1;
+const METADRIP_PHASE2_CONTRACT_ADDRESS = process.env.METADRIP_CONTRACT_ADDRESS_2;
 const NETWORK = process.env.NETWORK;
 
 const dclPhase1Contract = require("../contracts/DCL_1.json");
 const dclPhase2Contract = require("../contracts/DCL_2.json");
+const metadripPhase1Contract = require("../contracts/MetaDrip_1.json");
+const metadripPhase2Contract = require("../contracts/MetaDrip_2.json");
 
 const getContractInstance = async (contractId) => {
   try {
@@ -35,6 +39,32 @@ const getContractInstance = async (contractId) => {
     return dclContract;
   } catch (error) {
     logger.error(`Error while getting contract Instance. Contract Phase: ${contractId}, error: ${error}`);
+    throw new CustomError.BadRequestError(error);
+  }
+};
+
+const getMetaDripContractInstance = async (contractId) => {
+  try {
+    const contract = contractId == 1 ? metadripPhase1Contract : metadripPhase2Contract;
+    const CONTRACT_ADDRESS =
+      contractId == 1 ? METADRIP_PHASE1_CONTRACT_ADDRESS : METADRIP_PHASE2_CONTRACT_ADDRESS;
+
+    // provider - Alchemy
+    const alchemyProvider = new ethers.providers.AlchemyProvider(
+      (network = NETWORK),
+      API_KEY
+    );
+
+    // signer - you
+    const signer = new ethers.Wallet(PRIVATE_KEY, alchemyProvider);
+
+    // contract instance
+    const metadripContract = new ethers.Contract(CONTRACT_ADDRESS, contract, signer);
+    logger.info(`getMetaDripContractInstance for Phase: ${contractId}, contract Address : ${CONTRACT_ADDRESS}`);
+
+    return metadripContract;
+  } catch (error) {
+    logger.error(`Error while getting metadrip contract Instance. Contract Phase: ${contractId}, error: ${error}`);
     throw new CustomError.BadRequestError(error);
   }
 };
@@ -66,4 +96,5 @@ const getGasFees = async () => {
 module.exports = {
   getContractInstance,
   getGasFees,
+  getMetaDripContractInstance,
 };
