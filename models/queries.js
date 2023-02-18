@@ -15,6 +15,7 @@ const queriesSchema = new mongoose.Schema({
     required: [true, "Please provide a valid query"],
     maxlength: 500,
   },
+  time : { type : Date, default: Date.now }
 });
 
 module.exports = mongoose.model("queries", queriesSchema, "queries");

@@ -22,6 +22,7 @@ const contactSchema = new mongoose.Schema({
     required: [true, "Please provide message"],
     maxlength: 500,
   },
+  time : { type : Date, default: Date.now }
 });
 
 module.exports = mongoose.model("contacts", contactSchema, "contacts");

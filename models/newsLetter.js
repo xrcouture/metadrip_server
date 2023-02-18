@@ -10,6 +10,7 @@ const newsLetterSchema = new mongoose.Schema({
       message: "Please provide valid email",
     },
   },
+  time : { type : Date, default: Date.now }
 });
 
 module.exports = mongoose.model("newsLetter", newsLetterSchema, "newsLetter");
