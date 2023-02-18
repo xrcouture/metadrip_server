@@ -34,6 +34,7 @@ const virtualFittingSchema = new mongoose.Schema({
     min: 1,
     max: 2
   },
+  time : { type : Date, default: Date.now }
 });
 
 module.exports = mongoose.model("virtualFitting", virtualFittingSchema, "virtualFitting");
