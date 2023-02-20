@@ -3,10 +3,10 @@ const newsLetter = require("../models/newsLetter");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const logger = require("../utils/logger");
-const sendNotificationEmail = require("../utils/sendNotificationEmail")
+const sendNotificationEmail = require("../utils/sendNotificationEmail");
 
 const contactUs = async (req, res) => {
-  const { name, email, phone, message  } = req.body;
+  const { name, email, phone, message } = req.body;
 
   if (!email || !name || !message) {
     logger.error(`Empty email or name or message sent during contactUs`);
@@ -19,8 +19,12 @@ const contactUs = async (req, res) => {
     name,
     email,
     phone,
-    message
+    message,
   });
+
+  const mailContent = `<p>A new user ${name} with mailId ${email} has contacted us with the message <q>${message}</q></p>`;
+  const mailSubject = "User contacting us";
+  await sendNotificationEmail(mailContent, mailSubject);
 
   res.status(StatusCodes.CREATED).json({
     msg: "Success! Contact form details is stored in the DB",
@@ -31,30 +35,30 @@ const contactUs = async (req, res) => {
 };
 
 const registerForNewsLetter = async (req, res) => {
-    const { email } = req.body;
-  
-    if (!email ) {
-      logger.error(`Empty email sent during registerForNewsLetter`);
-      throw new CustomError.BadRequestError(
-        "Please provide valid email"
-      );
-    }
-  
-    const NewsLetter = await newsLetter.create({
-      email,
-    });
+  const { email } = req.body;
 
-    await sendNotificationEmail(email);
-  
-    res.status(StatusCodes.CREATED).json({
-      msg: "Success! The mailId have been subscribed for newsletter",
-    });
-    logger.info(
-      `The user with mailId: ${email} has been successfully signed for newsletter`
-    );
-  };
+  if (!email) {
+    logger.error(`Empty email sent during registerForNewsLetter`);
+    throw new CustomError.BadRequestError("Please provide valid email");
+  }
+
+  const NewsLetter = await newsLetter.create({
+    email,
+  });
+
+  const mailContent = `<p>A new user ${email} has subscribed to newsLetter</p>`;
+  const mailSubject = "User registered for newsLetter";
+  await sendNotificationEmail(mailContent, mailSubject);
+
+  res.status(StatusCodes.CREATED).json({
+    msg: "Success! The mailId have been subscribed for newsletter",
+  });
+  logger.info(
+    `The user with mailId: ${email} has been successfully signed for newsletter`
+  );
+};
 
 module.exports = {
-    contactUs,
-    registerForNewsLetter,
+  contactUs,
+  registerForNewsLetter,
 };

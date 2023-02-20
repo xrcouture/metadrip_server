@@ -2,6 +2,7 @@ const Query = require("../models/queries");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const logger = require("../utils/logger");
+const sendNotificationEmail = require("../utils/sendNotificationEmail");
 
 const userQuery = async (req, res) => {
   const { email, query } = req.body;
@@ -17,6 +18,10 @@ const userQuery = async (req, res) => {
     email,
     query,
   });
+
+  const mailContent = `<p>A new user ${email} has sent us the query <q>${query}</q></p>`;
+  const mailSubject = "User raised a query";
+  await sendNotificationEmail(mailContent, mailSubject);
 
   res.status(StatusCodes.CREATED).json({
     msg: "Success! User Query is stored in the DB",

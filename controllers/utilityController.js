@@ -2,6 +2,7 @@ const logger = require("../utils/logger");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const virtualFitting = require("../models/virtualFitting");
+const sendNotificationEmail = require("../utils/sendNotificationEmail");
 
 // **********************************uploadAssets Controller**********************************
 
@@ -21,6 +22,10 @@ const uploadAssets = async (req, res, next) => {
     walletAddress: req.body.address,
     phase: req.body.contractId,
   });
+
+  const mailContent = `<p>The user ${req.body.email} has uploaded photos for virtual fitting for itemId ${req.body.itemId} of Phase ${req.body.contractId}</p>`;
+  const mailSubject = "User submitted Photo for virtual Fitting";
+  await sendNotificationEmail(mailContent, mailSubject);
 
   logger.info(
     `The photo info has been successfully updated to db. mailId: ${req.body.email}, comments: ${req.body.comments}`
