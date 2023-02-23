@@ -20,7 +20,7 @@ const userQuery = async (req, res) => {
   });
 
   const mailContent = `<p>A new user ${email} has sent us the query <q>${query}</q></p>`;
-  const mailSubject = "User raised a query";
+  const mailSubject = "User raised a query from metadrip";
   await sendNotificationEmail(mailContent, mailSubject);
 
   res.status(StatusCodes.CREATED).json({
