@@ -47,6 +47,7 @@ const issueTokens = async (req, res) => {
         phase: contractId,
       });
 
+
       const mailContent = `<p>DCL wearables of phase: ${contractId} for itemId: ${itemIds[0]} has been claimed by ${address[0]}</p>`;
       const mailSubject = "User claimed DCL wearables from metadrip";
       await sendNotificationEmail(mailContent, mailSubject);
