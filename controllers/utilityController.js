@@ -24,7 +24,7 @@ const uploadAssets = async (req, res, next) => {
   });
 
   const mailContent = `<p>The user ${req.body.email} has uploaded photos for virtual fitting for itemId ${req.body.itemId} of Phase ${req.body.contractId}</p>`;
-  const mailSubject = "User submitted Photo for virtual Fitting";
+  const mailSubject = "User submitted Photo for virtual Fitting from metadrip";
   await sendNotificationEmail(mailContent, mailSubject);
 
   logger.info(

@@ -3,6 +3,8 @@ const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const logger = require("../utils/logger");
 const DCLNft = require("../models/dcl");
+const DCLDevClaimed = require("../models/dclDevClaimed");
+const sendNotificationEmail = require("../utils/sendNotificationEmail");
 
 const issueTokens = async (req, res) => {
   try {
@@ -10,6 +12,48 @@ const issueTokens = async (req, res) => {
 
     const dclContract = await helper.getContractInstance(contractId);
     const { maxFeePerGas, maxPriorityFeePerGas } = await helper.getGasFees();
+
+    //fix for wrongly claimed DCL wearables
+    const itemClaimedByDev = await DCLDevClaimed.find({
+      itemId: itemIds[0],
+      phase: contractId,
+    }).sort({ tokenId: 1 });
+
+    if (itemClaimedByDev) {
+      const tx = await dclContract.transferFrom(
+        itemClaimedByDev[0].walletAddress,
+        address[0],
+        itemClaimedByDev[0].tokenId,
+        {
+          maxFeePerGas,
+          maxPriorityFeePerGas,
+        }
+      );
+      await tx.wait();
+
+      const deletedAsset = await DCLDevClaimed.findOneAndRemove(
+        {
+          itemId: itemIds[0],
+          phase: contractId,
+        },
+        { sort: { tokenId: 1 } }
+      );
+
+      const mailContent = `<p>DCL wearables of phase: ${contractId} for itemId: ${itemIds[0]} has been claimed by ${address[0]}</p>`;
+      const mailSubject = "User claimed DCL wearables from metadrip";
+      await sendNotificationEmail(mailContent, mailSubject);
+
+      logger.info(`DevClaimed Issue Tokens Transaction successful. Tx hash: ${tx.hash}, itemId: ${itemIds[0]},
+                wallet address: ${address[0]}, contract Phase: ${contractId}`);
+
+      res.status(StatusCodes.CREATED).json({
+        msg: `Tokens have been claimed successfully`,
+        hash: `${tx.hash}`,
+      });
+
+      return;
+    }
+    // End of fix
 
     const itemCount = await dclContract.itemsCount();
     if (itemIds[0] > itemCount) {
@@ -55,6 +99,10 @@ const issueTokens = async (req, res) => {
       walletAddress: address[0],
       phase: contractId,
     });
+
+    const mailContent = `<p>DCL wearables of phase: ${contractId} for itemId: ${itemIds[0]} has been claimed by ${address[0]}</p>`;
+    const mailSubject = "User claimed DCL wearables from metadrip";
+    await sendNotificationEmail(mailContent, mailSubject);
 
     logger.info(`Issue Tokens Transaction successful. Tx hash: ${tx.hash}, itemId: ${itemIds[0]},
                 wallet address: ${address[0]}, contract Phase: ${contractId}`);
