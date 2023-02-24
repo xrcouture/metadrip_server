@@ -31,6 +31,7 @@ const issueTokens = async (req, res) => {
       );
       await tx.wait();
 
+      // delete from the dev database
       const deletedAsset = await DCLDevClaimed.findOneAndRemove(
         {
           itemId: itemIds[0],
@@ -38,6 +39,14 @@ const issueTokens = async (req, res) => {
         },
         { sort: { tokenId: 1 } }
       );
+
+      // update in the dcl database
+      const dcl = await DCLNft.create({
+        itemId: itemIds[0],
+        walletAddress: address[0],
+        phase: contractId,
+      });
+
 
       const mailContent = `<p>DCL wearables of phase: ${contractId} for itemId: ${itemIds[0]} has been claimed by ${address[0]}</p>`;
       const mailSubject = "User claimed DCL wearables from metadrip";
